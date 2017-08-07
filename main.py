@@ -4,26 +4,26 @@ from PIL import Image
 from math import sqrt
 import random
 
-width = 512
+width = 1024
 height = width
 size = (width,height)
-scale = 150.0
+scale = 300.0
 octaves = 6
 lacunarity = 2.2
 persistance = 0.65
-seed = 123456789012849# 7854 #3313164
+seed = 34522543 #123456789012849# 7854 #3313164
 
 heightMap = []
 
 colors = []
 
-waterDeepest = (.2, (9, 13, 59))
+waterDeepest = (.28, (9, 13, 59))
 colors.append(waterDeepest)
-waterDeep = (.33, (16, 22, 95))
+waterDeep = (.43, (16, 22, 95))
 colors.append(waterDeep)
-water = (.48, (26, 127, 233))
+water = (.55, (26, 127, 233))
 colors.append(water)
-waterShallow = (.53, (108, 194, 255))
+waterShallow = (.6, (108, 194, 255))#(.53, (108, 194, 255))
 colors.append(waterShallow)
 land = (1, (0, 121, 7))
 colors.append(land)
@@ -93,39 +93,24 @@ def paintRiver(x, y):
     marked = []
     h = inverseLerp(minHeight, maxHeight, heightMap[x * height + y])
     points.append((h, (x,y)))
-    while not hitWater and len(points) > 0:
+    while len(points) > 0:
         p = points.pop(0)
         px = p[1][0]
         py = p[1][1]
         pix[px, py] = waterShallow[1]
         heightValue = p[0]
-        minPoint = (1.1, (px, py))
+        minPoint = (heightValue, (px, py))
         around = [(0,1), (0,-1), (1,0), (-1,0), (1,1), (1,-1), (-1,1), (-1,-1)]
         for point in around:
             pointX = px + point[0]
             pointY = py + point[1]
             try:
                 pointHeight = inverseLerp(minHeight, maxHeight, heightMap[pointX * height + pointY])
-                if pointHeight <= minPoint[0]:
+                if pointHeight >= minPoint[0]:
                     minPoint = (pointHeight, (pointX, pointY))
             except:
                 pass
-        if minPoint[1] == (px, py):
-            around = [(0,1), (0,-1), (1,0), (-1,0)]
-            for point in around:
-                pointX = px + point[0]
-                pointY = py + point[1]
-                try:
-                    pointHeight = inverseLerp(minHeight, maxHeight, heightMap[pointX * height + pointY])
-                    pt = (pointHeight, (pointX, pointY))
-                    if pt not in marked:
-                        points.append(pt)
-                        marked.append(pt)
-                except:
-                    pass
-        elif minPoint[0] <= .48:
-            hitWater = True
-        elif minPoint not in marked:
+        if minPoint not in marked and minPoint[1] != (px, py):
             points.append(minPoint)
             marked.append(minPoint)
 
@@ -137,7 +122,7 @@ while riverCount < maxRivers:
     x = random.randint(0, width-1)
     y = random.randint(0, height-1)
     heightValue = inverseLerp(minHeight, maxHeight, heightMap[x * height + y])
-    if heightValue >= .53:
+    if heightValue < waterShallow[0] and heightValue > water[0]:
         # print "%dx%d" %(x, y)
         try:
             paintRiver(x, y)
