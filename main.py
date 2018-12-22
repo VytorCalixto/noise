@@ -4,42 +4,53 @@ from PIL import Image
 from math import sqrt
 import random
 
-width = 1024
-height = width
+zoom = .5
+
+height = int(1080 * zoom)
+width = int(height * (16.0 / 9.0))
 size = (width,height)
-scale = 300.0
+scale = 300.0 * zoom
 octaves = 6
 lacunarity = 2.2
 persistance = 0.65
-seed = 34522543 #123456789012849# 7854 #3313164
+seed = 22 #15 #034522543 #123456789012849 #07854 #3313164
 
 heightMap = []
 
 colors = []
 
 waterDeepest = (.28, (9, 13, 59))
-colors.append(waterDeepest)
+# colors.append(waterDeepest)
 waterDeep = (.43, (16, 22, 95))
-colors.append(waterDeep)
-water = (.55, (26, 127, 233))
+# colors.append(waterDeep)
+water = (.53, (167, 210, 255))
 colors.append(water)
-waterShallow = (.6, (108, 194, 255))#(.53, (108, 194, 255))
+waterShallow = (.55, (201, 232, 245))
 colors.append(waterShallow)
-land = (1, (0, 121, 7))
-colors.append(land)
-# sand = (.57, (245, 251, 138))
+sand = (.56, (245, 251, 138))
 # colors.append(sand)
-# grass = (.7, (26, 188, 20))
-# colors.append(grass)
-# tallGrass = (.77, (52, 88, 51))
-# colors.append(tallGrass)
-# rock = (.85, (108, 90, 68))
-# colors.append(rock)
-# rock2 = (.95, (44, 38, 31))
-# colors.append(rock2)
-# snow = (1, (255,255,255))
-# colors.append(snow)
+grass = (.65, (149, 185, 150))
+colors.append(grass)
+tallGrass = (.7, (122, 170, 122))
+colors.append(tallGrass)
+tallTallGrass = (.75, (163,182,138))
+colors.append(tallTallGrass)
+rock = (.83, (195, 211, 168))
+colors.append(rock)
+rock2 = (.92, (167, 167, 134))
+colors.append(rock2)
+rock3 = (1, (129,113,95))
+colors.append(rock3)
 
+
+# Preto e branco alto contraste
+# colors = []
+# water = (.53, (0,0,0)) 
+# colors.append(water)
+# waterShallow = (.55, (108, 194, 255))
+# colors.append(waterShallow)
+# land = (1, (255,255,255)) #(1, (0, 121, 7))
+# colors.append(land)
 
 random.seed(seed)
 
@@ -73,6 +84,7 @@ for x in range(width):
             minHeight = noiseHeight
         heightMap.append(noiseHeight)
 
+print("Max/Min height", maxHeight, minHeight)
 
 def inverseLerp(minValue, maxValue, amount):
     return (amount - minValue) / (maxValue - minValue)
@@ -87,6 +99,7 @@ for x in range(width):
                 pix[x,y] = color[1]
                 break
 
+# riverColor = (33,126,142)
 def paintRiver(x, y):
     hitWater = False
     points = []
@@ -116,19 +129,19 @@ def paintRiver(x, y):
 
 riverCount = 0
 maxRivers = sqrt(width*height)/2
-print "Generating %d rivers" % (maxRivers)
-while riverCount < maxRivers:
+#print "Generating %d rivers" % (maxRivers)
+#while riverCount < maxRivers:
     # random.seed(seed)
-    x = random.randint(0, width-1)
-    y = random.randint(0, height-1)
-    heightValue = inverseLerp(minHeight, maxHeight, heightMap[x * height + y])
-    if heightValue < waterShallow[0] and heightValue > water[0]:
+    # x = random.randint(0, width-1)
+    # y = random.randint(0, height-1)
+    # heightValue = inverseLerp(minHeight, maxHeight, heightMap[x * height + y])
+    # if heightValue < waterShallow[0] and heightValue > water[0]:
         # print "%dx%d" %(x, y)
-        try:
-            paintRiver(x, y)
-        except:
-            pass
-        finally:
-            riverCount += 1
+        # try:
+            # paintRiver(x, y)
+        # except:
+            # pass
+        # finally:
+            # riverCount += 1
 
-img.save("out.png", "PNG")
+img.save("test.png", "PNG")
