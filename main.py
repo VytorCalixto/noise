@@ -3,17 +3,18 @@ from noise import pnoise2, snoise2
 from PIL import Image
 from math import sqrt
 import random
+from os import sys
 
-zoom = .5
+zoom = 2
 
 height = int(1080 * zoom)
 width = int(height * (16.0 / 9.0))
-size = (width,height)
+size = (width, height)
 scale = 300.0 * zoom
 octaves = 6
-lacunarity = 2.2
+lacunarity = 2.25
 persistance = 0.65
-seed = 22 #15 #034522543 #123456789012849 #07854 #3313164
+seed = 15 #15 #034522543 #123456789012849 #07854 #3313164
 
 heightMap = []
 
@@ -52,12 +53,16 @@ colors.append(rock3)
 # land = (1, (255,255,255)) #(1, (0, 121, 7))
 # colors.append(land)
 
+if(seed is None):
+    seed = random.randrange(sys.maxsize)
+
 random.seed(seed)
+print("Seed: %d" % (seed))
 
 octaveOffsets = []
 for i in range(octaves):
-    x = random.randint(-10000,10000)
-    y = random.randint(-10000,10000)
+    x = random.randint(-10000, 10000)
+    y = random.randint(-10000, 10000)
     offset = (x, y)
     octaveOffsets.append(offset)
 

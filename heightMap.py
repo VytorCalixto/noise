@@ -60,6 +60,8 @@ class HeightMap:
                 normalizedPoint = self.inverseLerp(minHeight, maxHeight, point)
                 self.normalizedHeightMap.append(normalizedPoint)
 
+        return self.normalizedHeightMap
+
     # Generate B&W image
     def exportHeightMap(self, filename):
         img = Image.new('RGB', (self.w, self.h))
