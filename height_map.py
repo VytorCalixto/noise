@@ -1,81 +1,69 @@
+from typing import List
+
+from abstract_map import AbstractMap
 from noise import pnoise2
 import random
-from PIL import Image
 
 
-class HeightMap:
-    def __init__(self, width, height):
-        self.w = int(width)
-        self.h = int(height)
-        self.scale = 100.0
-        self.zoom = 1
+def inverse_lerp(min_value, max_value, amount):
+    return (amount - min_value) / (max_value - min_value)
+
+
+class HeightMap(AbstractMap):
+    def __init__(self, width, height, seed, enhance=1., zoom=1.):
+        super().__init__(width, height, seed, enhance, zoom)
+        self.scale = 100.
         self.octaves = 4
-        self.octavesOffset = []
-        self.lacunarity = 1.5
-        self.persistance = 0.5
-        self.seed = None
-        self.heightMap = []
-        self.normalizedHeightMap = []
+        self.lacunarity = 3.5  # 2.2
+        self.persistance = 0.4  # .5
+        self.offset_x = 0
+        self.offset_y = 0
 
-    def inverseLerp(self, minValue, maxValue, amount):
-        return (amount - minValue) / (maxValue - minValue)
-
-    def generateOctaveOffsets(self):
-        for i in range(self.octaves):
+    def generate_octaves_offset(self):
+        octave_offsets = []
+        for x in range(self.octaves):
             x = random.randint(-10000, 10000)
             y = random.randint(-10000, 10000)
-            offset = (x, y)
-            self.octavesOffset.append(offset)
+            octave_offsets.append((x, y))
+        return octave_offsets
 
-    def generateHeightMap(self):
-        random.seed(self.seed)
-        self.generateOctaveOffsets()
+    def get_octave_sample_value(self, value, frequency, octave_offset):
+        return (value / (self.scale * self._zoom)) * frequency + octave_offset
 
-        maxHeight = float("-inf")
-        minHeight = float("inf")
-
+    def generate_map(self):
+        # FIXME: improve performance. Diamond square?
+        super().generate_map()
+        random.seed(self._seed)
+        octaves_offsets = self.generate_octaves_offset()
+        max_height = float("-inf")
+        min_height = float("inf")
+        height_map = []
         # Generate height map
-        for x in range(self.w):
-            for y in range(self.h):
-                amplitude = 1.0
-                frequency = 1.0
-                noiseHeight = 0.0
-                for i in range(self.octaves):
-                    sampleX = x / (self.scale * self.zoom) * frequency + self.octavesOffset[i][0]
-                    sampleY = y / (self.scale * self.zoom) * frequency + self.octavesOffset[i][1]
+        for x in range(self._width):
+            for y in range(self._height):
+                amplitude = 1.
+                frequency = 1.
+                noise_height = 0.
+                for octave in range(self.octaves):
+                    octave_offset_x, octave_offset_y = octaves_offsets[octave]
+                    sample_x = self.get_octave_sample_value(x + self.offset_x, frequency, octave_offset_x)
+                    sample_y = self.get_octave_sample_value(y + self.offset_y, frequency, octave_offset_y)
 
-                    x_value = 0
-                    offset_x = x_value / (self.scale * self.zoom) * frequency + self.octavesOffset[i][0]
-
-                    perlinValue = pnoise2(sampleX + offset_x, sampleY)
-                    noiseHeight += perlinValue * amplitude
+                    perlin_value = pnoise2(sample_x, sample_y)
+                    noise_height += perlin_value * amplitude
 
                     amplitude *= self.persistance
                     frequency *= self.lacunarity
-                if (noiseHeight > maxHeight):
-                    maxHeight = noiseHeight
-                if (noiseHeight < minHeight):
-                    minHeight = noiseHeight
-                self.heightMap.append(noiseHeight)
-        # Normalize height map
-        for x in range(self.w):
-            for y in range(self.h):
-                index = x * self.h + y
-                point = self.heightMap[index]
-                normalizedPoint = self.inverseLerp(minHeight, maxHeight, point)
-                self.normalizedHeightMap.append(normalizedPoint)
+                if noise_height > max_height:
+                    max_height = noise_height
+                if noise_height < min_height:
+                    min_height = noise_height
+                height_map.append(noise_height)
+        # Normalize the height map
+        self.points = [inverse_lerp(min_height, max_height, point) for point in height_map]
 
-        return self.normalizedHeightMap
-
-    # Generate B&W image
-    def exportHeightMap(self, filename):
-        img = Image.new('RGB', (self.w, self.h))
-        pix = img.load()
-        for x in range(self.w):
-            for y in range(self.h):
-                index = x * self.h + y
-                point = self.normalizedHeightMap[index]
-
-                color = int(point * 255)
-                pix[x, y] = (color, color, color)
-        img.save(filename + ".png", "PNG")
+    def export_map(self, name):
+        def get_point_color(point):
+            color = int(point * 255)
+            return color, color, color
+        super().export_image(name, get_point_color)
