@@ -2,11 +2,13 @@ from noise import pnoise2
 import random
 from PIL import Image
 
+
 class HeightMap:
     def __init__(self, width, height):
-        self.w = width
-        self.h = height
+        self.w = int(width)
+        self.h = int(height)
         self.scale = 100.0
+        self.zoom = 1
         self.octaves = 4
         self.octavesOffset = []
         self.lacunarity = 1.5
@@ -39,17 +41,17 @@ class HeightMap:
                 frequency = 1.0
                 noiseHeight = 0.0
                 for i in range(self.octaves):
-                    sampleX = x/self.scale * frequency + self.octavesOffset[i][0]
-                    sampleY = y/self.scale * frequency + self.octavesOffset[i][1]
+                    sampleX = x / (self.scale * self.zoom) * frequency + self.octavesOffset[i][0]
+                    sampleY = y / (self.scale * self.zoom) * frequency + self.octavesOffset[i][1]
 
                     perlinValue = pnoise2(sampleX, sampleY)
                     noiseHeight += perlinValue * amplitude
 
                     amplitude *= self.persistance
                     frequency *= self.lacunarity
-                if(noiseHeight > maxHeight):
+                if (noiseHeight > maxHeight):
                     maxHeight = noiseHeight
-                if(noiseHeight < minHeight):
+                if (noiseHeight < minHeight):
                     minHeight = noiseHeight
                 self.heightMap.append(noiseHeight)
         # Normalize height map
