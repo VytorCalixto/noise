@@ -44,7 +44,10 @@ class HeightMap:
                     sampleX = x / (self.scale * self.zoom) * frequency + self.octavesOffset[i][0]
                     sampleY = y / (self.scale * self.zoom) * frequency + self.octavesOffset[i][1]
 
-                    perlinValue = pnoise2(sampleX, sampleY)
+                    x_value = 0
+                    offset_x = x_value / (self.scale * self.zoom) * frequency + self.octavesOffset[i][0]
+
+                    perlinValue = pnoise2(sampleX + offset_x, sampleY)
                     noiseHeight += perlinValue * amplitude
 
                     amplitude *= self.persistance

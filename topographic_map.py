@@ -1,46 +1,43 @@
-from point import Point, WaterPointType, LandPointType
+from topographic_point import TopographicPoint, WaterPointType, LandPointType
 from PIL import Image
 from operator import attrgetter
 import random
 
+map_land_heights_percentages = [
+    (.01, LandPointType.SAND),
+    (.10, LandPointType.GRASS),
+    (.12, LandPointType.TALL_GRASS),
+    (.22, LandPointType.FOREST),
+    (.25, LandPointType.HILL),
+    (.15, LandPointType.ROCK),
+    (.15, LandPointType.MOUNTAIN)
+]
 
-class Map:
+
+class TopographicMap:
     def __init__(self, width, height):
         self.width = int(width)
         self.height = int(height)
         self.points = []
         self.waterLevel = .5
         self.waterFactor = 30.
-        self.landFactor = 20.
+        self.seed = None
 
     def get_water_point_type(self, point):
-        shallow_limit = self.waterLevel * (1 - 1/self.waterFactor)
+        shallow_limit = self.waterLevel * .98
         point.type = WaterPointType.WATER
         if point.height >= shallow_limit:
             point.type = WaterPointType.WATER_SHALLOW
 
     def get_land_point_type(self, point):
-        land_factor = self.landFactor if self.landFactor >= 32. else 32.
-
-        tall_grass_limit = self.waterLevel * (1 + 2/land_factor)
-        forest_limit = self.waterLevel * (1 + 4/land_factor)
-        hill_limit = self.waterLevel * (1 + 8/land_factor)
-        rock_limit = self.waterLevel * (1 + 16/land_factor)
-        mountain_limit = 1
-
-        point.type = LandPointType.MOUNTAIN
-        if point.height < tall_grass_limit:
-            point.type = LandPointType.GRASS
-        elif point.height < forest_limit:
-            point.type = LandPointType.TALL_GRASS
-        elif point.height < hill_limit:
-            point.type = LandPointType.FOREST
-        elif point.height < rock_limit:
-            point.type = LandPointType.HILL
-        elif point.height < mountain_limit:
-            point.type = LandPointType.ROCK
-        else:
-            point.type = LandPointType.MOUNTAIN
+        base = 1 - self.waterLevel
+        percentage_accumulator = 0.
+        for percentage, point_type in map_land_heights_percentages:
+            percentage_accumulator = percentage_accumulator + percentage
+            land_limit = self.waterLevel + (base * percentage_accumulator)
+            if point.height <= land_limit:
+                point.type = point_type
+                break
 
     def get_point_type(self, point):
         if point.height <= self.waterLevel:
@@ -71,14 +68,14 @@ class Map:
         for x in range(self.width):
             for y in range(self.height):
                 index = x * self.height + y
-                point = Point(x, y, points[index])
+                point = TopographicPoint(x, y, points[index])
                 self.get_point_type(point)
                 self.points.append(point)
         return self.points
 
     def generate_rivers(self, rivers_count):
         rivers = 0
-        random.seed(rivers_count)
+        random.seed(self.seed)
         while rivers < rivers_count:
             x = random.randint(0, self.width - 1)
             y = random.randint(0, self.height - 1)
@@ -90,16 +87,19 @@ class Map:
         point = self.get_point(x, y)
         if isinstance(point.type, WaterPointType):
             return False
-        river = []
 
+        river = []
         while point is not None and isinstance(point.type, LandPointType):
-            point.type = WaterPointType.RIVER
+            point.type = WaterPointType.RIVER_MARKED
             river.append(point)
             adjacent = self.get_adjacents(point.x, point.y)
-            adjacent_land = [x for x in adjacent if x.type != WaterPointType.RIVER]
-            if len(adjacent_land) == 0:
+            adjacent_non_river = [x for x in adjacent if x.type != WaterPointType.RIVER_MARKED]
+            if len(adjacent_non_river) == 0:
                 break
-            point = min(adjacent_land, key=attrgetter('height'))
+            point = min(adjacent_non_river, key=attrgetter('height'))
+
+        for x in river:
+            x.type = WaterPointType.RIVER
         return river
 
     def export_map_image(self, filename):
@@ -109,6 +109,8 @@ class Map:
             for y in range(self.height):
                 point = self.get_point(x, y)
 
+                if point.type is None:
+                    print(point.height)
                 pix[x, y] = point.type.value
         img.save(filename + ".png", "PNG")
 
