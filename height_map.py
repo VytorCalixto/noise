@@ -1,5 +1,3 @@
-from typing import List
-
 from abstract_map import AbstractMap
 from noise import pnoise2
 import random
