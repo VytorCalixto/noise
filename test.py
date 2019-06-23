@@ -1,50 +1,33 @@
 #!/usr/bin/python3
 from PIL import Image, ImageDraw
 import numpy as np
-from graph.voronoi_graph import VoronoiGraph
-from noise import pnoise2
-from height_map import inverse_lerp
+from helpers.convert_coordinates import convert_coordinates
+from map.voronoi_based.voronoi_world_map import VoronoiWorldMap
 
-range_y = 250
+"""
+Future steps
+
+1. generate rivers (run the river through the center of the faces? through the corners? both?)
+2. biomes and other needed steps
+
+3. When printing the map, it's maybe possible to use a similar algorithm to the height map based to add noise to Voronoi
+    and make the map prettier
+    3.1. if the voronoi map has all the information for a full map (cities, rivers, biomes) we can then use it as input 
+        to generate a height map that should be looped
+"""
+
+range_y = 500
 range_x = range_y * 2
 map_range = (range_x, range_y)
 max_points = range_y
-# np.random.seed(15)
-points_x = np.random.randint(0, high=range_x, size=max_points)
-points_y = np.random.randint(0, high=range_y, size=max_points)
-all_points = list(zip(points_x, points_y))
-points = (list(set(all_points)))
+sea_level = .55
+seed = None  # 15  # 2672264153
+if seed is None:
+    seed = np.random.randint(0, high=2 ** 32 - 1)
+print("seed", seed)
 # points = [(1, 1), (5, 5), (3, 5), (8, 1)]  # debug points
-
-voronoi_graph = VoronoiGraph(map_range)
-voronoi_graph.create_graph(points)
-
-# Height test
-min_height = float("inf")
-max_height = float("-inf")
-for corner in voronoi_graph.corners:
-    x, y = corner.get_coordinates()
-    corner.height = pnoise2(x, y)
-    if corner.height > max_height:
-        max_height = corner.height
-    if corner.height < min_height:
-        min_height = corner.height
-
-for corner in voronoi_graph.corners:
-    corner.height = inverse_lerp(min_height, max_height, corner.height)
-
-for face in voronoi_graph.faces:
-    face.height = np.mean([corner.height for corner in face.corners])
-    print(face.height)
-
-
-def convert_coordinates(coordinates, coordinates_scale, final_scale):
-    x, y = coordinates
-    coordinates_scale_x, coordinates_scale_y = coordinates_scale
-    scale_x, scale_y = final_scale
-    final_x = x * (scale_x / coordinates_scale_x)
-    final_y = y * (scale_y / coordinates_scale_y)
-    return final_x, final_y
+world = VoronoiWorldMap(map_range, max_points, seed)
+voronoi_graph = world.generate_world()
 
 
 def export_polygons(name, faces, size, voronoi_outline):
@@ -53,13 +36,19 @@ def export_polygons(name, faces, size, voronoi_outline):
     for face in faces:
         vertexes = [convert_coordinates(corner.get_coordinates(), voronoi_graph.size, size)
                     for corner in face.corners]
-        fill = (133, 164, 123) if face.height > .51 else (167, 210, 255)
+        fill_color = int(255 * face.height)
+        fill = (0, fill_color, 0) if face.height > sea_level else (0, 0, fill_color)
         draw.polygon(vertexes, outline=voronoi_outline, fill=fill)
         center_x, center_y = convert_coordinates(face.center.get_coordinates(), voronoi_graph.size, size)
-        # draw.point(center, "red")
-        ellipse_radius = int(size[1] / 200)
+        ellipse_radius = int(size[1] / 300)
         draw.ellipse([center_x - ellipse_radius, center_y - ellipse_radius, center_x + ellipse_radius,
-                      center_y + ellipse_radius], outline="black", fill="black")
+                      center_y + ellipse_radius], outline="red", fill="red")
+        for corner in face.corners:
+            corner_color = (int(255 * corner.height), int(255 * corner.height), int(255 * corner.height))
+            corner_radius = ellipse_radius * corner.height * 2
+            x, y = convert_coordinates(corner.get_coordinates(), voronoi_graph.size, size)
+            draw.ellipse([x - corner_radius, y - corner_radius, x + corner_radius, y + corner_radius],
+                         fill=corner_color, outline=corner_color)
     img.save(name + ".png", "PNG")
     return
 

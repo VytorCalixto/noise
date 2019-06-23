@@ -1,21 +1,23 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from map.world_map import AbstractWorldMap
 from PIL import Image
-from random import randrange
-from sys import maxsize
 
 
-class AbstractMap(ABC):
+class AbstractHeightMap(AbstractWorldMap):
     def __init__(self, width: int, height: int, seed: int = None, enhance: float = 1., zoom: float = 1.):
+        super().__init__(seed)
         self._width = int(width)
         self._height = int(height)
-        self._seed = seed if seed is not None else randrange(maxsize)
         self.points = []
         self._enhance = enhance
         self._zoom = zoom
 
+    def generate_world(self):
+        self.generate_map()
+
     @abstractmethod
     def generate_map(self):
-        self.points = []
+        pass
 
     def get_map(self):
         return self.points
@@ -67,14 +69,6 @@ class AbstractMap(ABC):
     @height.setter
     def height(self, height):
         self._height = int(height)
-
-    @property
-    def seed(self):
-        return self._seed
-
-    @seed.setter
-    def seed(self, seed):
-        self._seed = seed if seed is not None else randrange(maxsize)
 
     @property
     def zoom(self):

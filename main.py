@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from topographic_map import TopographicMap
+from map.height_map_based.topographic_map import TopographicMap
 from math import sqrt
 
 
@@ -7,9 +7,11 @@ aspect_ratio = 2  # 16. / 9.
 height = 100
 width = height * aspect_ratio
 
-topographic_map = TopographicMap(width, height, seed=1236924033112321833)
+# seeds 1236924033112321833
+topographic_map = TopographicMap(width, height, seed=None)
 topographic_map.zoom = .5
 topographic_map.enhance = 5
+topographic_map.sea_level = .55
 
 print(topographic_map.width, topographic_map.height, topographic_map.seed)
 topographic_map.generate_map()
@@ -41,8 +43,14 @@ http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generati
 http://procworld.blogspot.com/2016/07/geometry-is-destiny-part-2.html
 """
 
-# TODO: improve height map generation performance
-# TODO: fix rivers
-#   TODO: find and mark lakes. Get rivers to oceans?
-# TODO: center zoom?
-# TODO: clean borders
+"""
+TODO: improve height map generation performance
+TODO: fix rivers
+  TODO: find and mark lakes. Get rivers to oceans?
+  Possible solution:
+    1. get a pair of numbers between [0,1]
+    2. Use this as percentage to the map size and get a pair o points
+    3. Use this pair to start the river
+TODO: center zoom?
+TODO: clean borders
+"""

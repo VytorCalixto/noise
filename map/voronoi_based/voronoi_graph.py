@@ -1,5 +1,7 @@
 import pytess
 import numpy as np
+from typing import List, Tuple
+from shapely.geometry import Polygon
 from graph.face import Face, FaceType
 from graph.corner import Corner
 from graph.edge import Edge
@@ -29,24 +31,24 @@ def shift_polygon(polygon, shift: tuple):
 def get_triangles_in_size(triangles, size):
     size_x, size_y = size
     triangles_in_range = []
+    search_window = Polygon([(size_x, size_y), (size_x * 2, size_y), (size_x * 2, size_y * 2), (size_x, size_y * 2)])
     for triangle in triangles:
-        for point in triangle:
-            x, y = point
-            if size_x <= x <= size_x * 2 and size_y <= y <= size_y * 2:
-                triangles_in_range.append(shift_polygon(triangle, size))
+        triangle_polygon = Polygon(triangle)
+        if triangle_polygon.intersects(search_window):
+            triangles_in_range.append(shift_polygon(triangle, size))
     return triangles_in_range
 
 
 def get_voronoi_in_size(voronoi_polygons, size):
     size_x, size_y = size
     voronoi_diagram = []
+    search_window = Polygon([(size_x, size_y), (size_x * 2, size_y), (size_x * 2, size_y * 2), (size_x, size_y * 2)])
     for voronoi in voronoi_polygons:
         center, polygon = voronoi
-        for point in polygon:
-            x, y = point
-            if size_x <= x <= size_x * 2 and size_y <= y <= size_y * 2:
-                new_center = np.subtract(center, size) if center is not None else center
-                voronoi_diagram.append((new_center, shift_polygon(polygon, size)))
+        voronoi_polygon = Polygon(polygon)
+        if voronoi_polygon.intersects(search_window):
+            new_center = np.subtract(center, size) if center is not None else center
+            voronoi_diagram.append((new_center, shift_polygon(polygon, size)))
     return voronoi_diagram
 
 
@@ -112,16 +114,34 @@ class VoronoiGraph:
         self.faces.add(face)
         return face
 
+    def set_twin_faces(self):
+        marked_faces = []
+        # First, mark who has a twin
+        for face in self.faces:
+            for corner in face.corners:
+                if corner.x < 0. or corner.x > self.size[0]:
+                    face.has_twin = True
+                    direction = +1 if corner.x < 0 else -1
+                    marked_faces.append((face, direction))
+        for marked in marked_faces:
+            face, direction = marked
+            shift_amount = (self.size[0] * direction, 0)
+            shifted_center = tuple(np.add(face.center.get_coordinates(), shift_amount))
+            for possible_twin in marked_faces:
+                if possible_twin[0].center.get_coordinates() == shifted_center:
+                    face.twin = possible_twin[0]
+
     def create_voronoi_faces(self, voronoi_diagram):
         for voronoi in voronoi_diagram:
             center, polygon = voronoi
             face = self.add_face(polygon, FaceType.VORONOI)
             if center is not None:
-                center_point = Corner(center[0], center[1])
+                center_point = Corner(int(center[0]), int(center[1]))
                 face.center = center_point
+        self.set_twin_faces()
         return self.faces
 
-    def create_graph(self, points: list):
+    def create_graph(self, points: List[Tuple[float, float]]):
         looped_points = get_looped_points(points, self.size)
         triangles = get_triangles_in_size(pytess.triangulate(looped_points), self.size)
         voronoi_diagram = get_voronoi_in_size(pytess.voronoi(looped_points), self.size)

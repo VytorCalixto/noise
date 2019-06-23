@@ -1,13 +1,10 @@
-from abstract_map import AbstractMap
+from helpers.inverse_lerp import inverse_lerp
+from map.height_map_based.abstract_height_map import AbstractHeightMap
 from noise import pnoise2
 import random
 
 
-def inverse_lerp(min_value, max_value, amount):
-    return (amount - min_value) / (max_value - min_value)
-
-
-class HeightMap(AbstractMap):
+class HeightMap(AbstractHeightMap):
     def __init__(self, width, height, seed, enhance=1., zoom=1.):
         super().__init__(width, height, seed, enhance, zoom)
         self.scale = 100.

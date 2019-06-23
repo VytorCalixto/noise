@@ -3,6 +3,7 @@ from typing import List
 from graph.edge import Edge
 from graph.corner import Corner
 
+
 class FaceType(Enum):
     VORONOI = "voronoi"
     TRIANGLE = "triangle"
@@ -16,6 +17,8 @@ class Face:
         self.center = None
         self.type = face_type
         self.height = 0.
+        self.twin = None  # A face that "loops" has a twin
+        self.has_twin = False
 
     @property
     def borders(self):

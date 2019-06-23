@@ -1,7 +1,7 @@
-from topographic_point import TopographicPoint, WaterPointType, LandPointType
+from map.height_map_based.topographic_point import TopographicPoint, WaterPointType, LandPointType
 from operator import attrgetter
 import random
-from height_map import HeightMap
+from map.height_map_based.height_map import HeightMap
 
 map_land_heights_percentages = [
     (.01, LandPointType.SAND),
@@ -20,7 +20,7 @@ class TopographicMap(HeightMap):
         self.sea_level = .5
 
     def get_water_point_type(self, point):
-        shallow_limit = self.sea_level * .98
+        shallow_limit = self.sea_level * .96
         point.type = WaterPointType.WATER
         if point.height >= shallow_limit:
             point.type = WaterPointType.WATER_SHALLOW
