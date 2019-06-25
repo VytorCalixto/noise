@@ -4,13 +4,13 @@ from math import sqrt
 
 
 aspect_ratio = 2  # 16. / 9.
-height = 100
+height = 50
 width = height * aspect_ratio
 
-# seeds 1236924033112321833
-topographic_map = TopographicMap(width, height, seed=None)
+# seeds 1236924033112321833 1053160534
+topographic_map = TopographicMap(width, height, seed=3679271373)
 topographic_map.zoom = .5
-topographic_map.enhance = 5
+topographic_map.enhance = 10
 topographic_map.sea_level = .55
 
 print(topographic_map.width, topographic_map.height, topographic_map.seed)

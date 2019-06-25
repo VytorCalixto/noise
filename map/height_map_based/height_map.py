@@ -2,6 +2,7 @@ from helpers.inverse_lerp import inverse_lerp
 from map.height_map_based.abstract_height_map import AbstractHeightMap
 from noise import pnoise2
 import random
+import math
 
 
 class HeightMap(AbstractHeightMap):
@@ -26,6 +27,7 @@ class HeightMap(AbstractHeightMap):
         return (value / (self.scale * self._zoom)) * frequency + octave_offset
 
     def generate_map(self):
+        print("Height map")
         # FIXME: improve performance. Diamond square?
         super().generate_map()
         random.seed(self._seed)

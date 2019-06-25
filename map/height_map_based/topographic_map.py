@@ -43,8 +43,11 @@ class TopographicMap(HeightMap):
             else self.get_land_point_type(point)
 
     def generate_map(self):
-        super().generate_map()
-        height_map = super().get_map()
+        print("Topographic")
+        height_map = self.points
+        if len(height_map) == 0:
+            super().generate_map()
+            height_map = super().get_map()
         self.points = []
         for x in range(self.width):
             for y in range(self.height):

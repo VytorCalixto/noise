@@ -14,7 +14,9 @@ class VoronoiWorldMap(AbstractWorldMap):
         size_x, size_y = self.size
         x = np.random.randint(0, high=size_x, size=self.max_points)
         y = np.random.randint(0, high=size_y, size=self.max_points)
-        self.points = list(set(list(zip(x, y))))
+        points = list(zip(x, y))
+        points.extend([(0, 0), (0, self.size[1]), (self.size[0], 0), self.size])  # add the borders
+        self.points = list(set(points))
         voronoi_map = VoronoiHeightGraph(self.size, self.seed)
         voronoi_map.create_graph(self.points)
         return voronoi_map
