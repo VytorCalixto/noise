@@ -20,7 +20,7 @@ Future steps
         to generate a height map that should be looped
 """
 
-range_y = 500
+range_y = 1000
 range_x = range_y * 2
 map_range = (range_x, range_y)
 max_points = range_y
@@ -59,7 +59,7 @@ def export_polygons(name, faces, size, voronoi_outline):
     return
 
 
-height = 500
+height = 1000
 width = height * 2
 img_size = (width, height)
 
@@ -67,22 +67,74 @@ print("Exporting voronoi image")
 export_polygons("voronoi", voronoi_graph.faces, img_size, "black")
 
 
-def voronoi_2_height_map(voronoi_map: VoronoiHeightGraph, hm):
-    # TODO: maybe looping the points we can maintain the loop in the topography map
-    # TODO: the same trick we did to ensure that the Voronoi map looped
+def get_loop_points(voronoi_map):
     points = [face.center.get_coordinates() for face in voronoi_map.faces]
     points.extend([corner.get_coordinates() for corner in voronoi_map.corners])
     values = [face.height for face in voronoi_map.faces]
     values.extend([corner.height for corner in voronoi_map.corners])
+
+    final_points = np.array(points, copy=True)
+    final_values = np.array(values, copy=True)
+
+    # North
+    north = (voronoi_map.size[0], 0)
+    final_points = np.append(final_points, points + np.full(np.shape(points), north, dtype=object), axis=0)
+    final_values = np.append(final_values, values)
+    # North-East
+    north_east = (voronoi_map.size[0] * 2, 0)
+    final_points = np.append(final_points, points + np.full(np.shape(points), north_east, dtype=object), axis=0)
+    final_values = np.append(final_values, values)
+    # # West
+    # west = (0, voronoi_map.size[1])
+    # final_points = np.append(final_points, points + np.full(np.shape(points), west, dtype=object), axis=0)
+    # final_values = np.append(final_values, values)
+    # # Center
+    # center = (voronoi_map.size[0], voronoi_map.size[1])
+    # final_points = np.append(final_points, points + np.full(np.shape(points), center, dtype=object), axis=0)
+    # final_values = np.append(final_values, values)
+    # # East
+    # east = (voronoi_map.size[0] * 2, voronoi_map.size[1])
+    # final_points = np.append(final_points, points + np.full(np.shape(points), east, dtype=object), axis=0)
+    # final_values = np.append(final_values, values)
+    # # South-West
+    # south_west = (0, voronoi_map.size[1] * 2)
+    # final_points = np.append(final_points, points + np.full(np.shape(points), south_west, dtype=object), axis=0)
+    # final_values = np.append(final_values, values)
+    # # South
+    # south = (voronoi_map.size[0], voronoi_map.size[1] * 2)
+    # final_points = np.append(final_points, points + np.full(np.shape(points), south, dtype=object), axis=0)
+    # final_values = np.append(final_values, values)
+    # # South-East
+    # south_east = (voronoi_map.size[0] * 2, voronoi_map.size[1] * 2)
+    # final_points = np.append(final_points, points + np.full(np.shape(points), south_east, dtype=object), axis=0)
+    # final_values = np.append(final_values, values)
+
+    return final_points, final_values
+
+
+def voronoi_2_height_map(voronoi_map: VoronoiHeightGraph, hm):
+    # TODO: maybe looping the points we can maintain the loop in the topography map
+    # TODO: the same trick we did to ensure that the Voronoi map looped
+    print("Getting points")
+    points, values = get_loop_points(voronoi_map)
+    print("Got'em")
+    # points = [face.center.get_coordinates() for face in voronoi_map.faces]
+    # points.extend([corner.get_coordinates() for corner in voronoi_map.corners])
+    # values = [face.height for face in voronoi_map.faces]
+    # values.extend([corner.height for corner in voronoi_map.corners])
+    print("Getting coordinates")
     coordinates = []
     x = np.arange(hm.height)
     for y in range(hm.width):
         line = np.full(hm.height, y)
-        coordinates.extend(np.column_stack((line, x)))
+        coordinates.extend(np.column_stack((line, x)) + np.full((hm.height, 2), (voronoi_map.size[0], 0), dtype=object))
     coordinates = [convert_coordinates(tuple(coordinate), (hm.width, hm.height), voronoi_map.size) for coordinate in
                    coordinates]
+    print("Got'em")
+    print("Getting interpolation values")
     grid = griddata(points, values, coordinates)
     hm.points = grid
+    print("Got'em")
 
 
 topographic_map = TopographicMap(width, height, seed)

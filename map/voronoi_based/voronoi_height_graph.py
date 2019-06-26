@@ -8,10 +8,10 @@ from helpers.inverse_lerp import inverse_lerp
 class VoronoiHeightGraph(VoronoiGraph):
     def __init__(self, size, seed: int = None):
         super().__init__(size)
-        self.octaves = 16
+        self.octaves = 4
         self.lacunarity = 3.5
-        self.persistance = 0.4
-        self.scale = 100.
+        self.persistance = 0.5
+        self.scale = 750.
         self.seed = seed
 
     def generate_octaves_offset(self):
@@ -54,6 +54,7 @@ class VoronoiHeightGraph(VoronoiGraph):
             corners = []
             corners.extend(face.corners)
             if face.twin is not None:
+                # FIXME: change corner height to be the mean of the corner and it's twin corner
                 corners.extend(face.twin.corners)
             face.height = np.mean([corner.height for corner in corners])
 

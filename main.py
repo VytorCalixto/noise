@@ -8,7 +8,7 @@ height = 50
 width = height * aspect_ratio
 
 # seeds 1236924033112321833 1053160534
-topographic_map = TopographicMap(width, height, seed=3679271373)
+topographic_map = TopographicMap(width, height, seed=1053160534)
 topographic_map.zoom = .5
 topographic_map.enhance = 10
 topographic_map.sea_level = .55
