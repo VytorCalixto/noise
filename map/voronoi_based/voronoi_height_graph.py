@@ -11,7 +11,7 @@ class VoronoiHeightGraph(VoronoiGraph):
         self.octaves = 4
         self.lacunarity = 3.5
         self.persistance = 0.5
-        self.scale = 750.
+        self.scale = size[1] / 2.6
         self.seed = seed
 
     def generate_octaves_offset(self):
@@ -57,6 +57,11 @@ class VoronoiHeightGraph(VoronoiGraph):
                 # FIXME: change corner height to be the mean of the corner and it's twin corner
                 corners.extend(face.twin.corners)
             face.height = np.mean([corner.height for corner in corners])
+            # FIXME: quick and dirty way
+            if face.twin is not None:
+                face.twin.height = face.height
+                for corner in face.corners:
+                    corner.height = face.height
 
     def create_graph(self, points: List[Tuple[float, float]]):
         np.random.seed(self.seed)
