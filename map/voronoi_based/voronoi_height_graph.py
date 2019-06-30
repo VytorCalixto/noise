@@ -57,11 +57,11 @@ class VoronoiHeightGraph(VoronoiGraph):
                 # FIXME: change corner height to be the mean of the corner and it's twin corner
                 corners.extend(face.twin.corners)
             face.height = np.mean([corner.height for corner in corners])
-            # FIXME: quick and dirty way
-            if face.twin is not None:
-                face.twin.height = face.height
-                for corner in face.corners:
-                    corner.height = face.height
+        # FIXME: quick(?) and dirty way
+        for face in [face for face in self.faces if face.twin is not None]:
+            face.twin.height = face.height
+            for corner in face.corners:
+                corner.height = face.height
 
     def create_graph(self, points: List[Tuple[float, float]]):
         np.random.seed(self.seed)

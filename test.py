@@ -1,7 +1,10 @@
 #!/usr/bin/python3
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from scipy.interpolate import griddata
+from shapely import geometry
+
+from graph.face import FaceType
 from helpers.convert_coordinates import convert_coordinates
 from map.voronoi_based.voronoi_world_map import VoronoiWorldMap
 from map.voronoi_based.voronoi_height_graph import VoronoiHeightGraph
@@ -20,17 +23,17 @@ Future steps
         to generate a height map that should be looped
 """
 
-range_y = 1000
+range_y = 250
 range_x = range_y * 2
 map_range = (range_x, range_y)
 max_points = range_y
-sea_level = .55
+sea_level = .5
 seed = None  # 2  # 15  # 2672264153
 if seed is None:
     seed = np.random.randint(0, high=2 ** 32 - 1)
 print("seed", seed)
 # points = [(1, 1), (5, 5), (3, 5), (8, 1)]  # debug points
-world = VoronoiWorldMap(map_range, max_points, seed)
+world = VoronoiWorldMap(map_range, max_points, sea_level, seed)
 print("Generating voronoi")
 voronoi_graph = world.generate_world()
 print("Generated")
@@ -44,7 +47,15 @@ def export_polygons(name, faces, size, voronoi_outline):
                     for corner in face.corners]
         fill_color = int(255 * face.height)
         fill = (0, fill_color, 0) if face.height > sea_level else (0, 0, fill_color)
+        fill = face.type.value
         draw.polygon(vertexes, outline=voronoi_outline, fill=fill)
+
+        poly = geometry.Polygon([[p.x, p.y] for p in face.corners])
+        centroid = poly.centroid.xy
+        centroid = convert_coordinates((centroid[0][0], centroid[1][0]), voronoi_graph.size, size)
+        fnt = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 10)
+        draw.text(centroid, "%i" % len(face.neighbors), font=fnt, fill="red")
+
         center_x, center_y = convert_coordinates(face.center.get_coordinates(), voronoi_graph.size, size)
         ellipse_radius = int(size[1] / 300)
         draw.ellipse([center_x - ellipse_radius, center_y - ellipse_radius, center_x + ellipse_radius,

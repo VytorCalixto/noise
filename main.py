@@ -4,20 +4,20 @@ from math import sqrt
 
 
 aspect_ratio = 2  # 16. / 9.
-height = 50
+height = 100
 width = height * aspect_ratio
 
 # seeds 1236924033112321833 1053160534
-topographic_map = TopographicMap(width, height, seed=1053160534)
+topographic_map = TopographicMap(width, height, seed=None)
 topographic_map.zoom = .5
 topographic_map.enhance = 10
 topographic_map.sea_level = .55
 
 print(topographic_map.width, topographic_map.height, topographic_map.seed)
 topographic_map.generate_map()
-rivers_count = int(sqrt(topographic_map.width) + sqrt(topographic_map.height))
-topographic_map.generate_rivers(rivers_count)
-print(rivers_count)
+# rivers_count = int(sqrt(topographic_map.width) + sqrt(topographic_map.height))
+# topographic_map.generate_rivers(rivers_count)
+# print(rivers_count)
 topographic_map.export_map("topographic")
 
 """

@@ -7,6 +7,11 @@ class Edge:
         self._corners = (None, None)
         self.faces_joined = []
 
+    def add_face_joined(self, face):
+        for joined in self.faces_joined:
+            joined.neighbors.add(face)
+        self.faces_joined.append(face)
+
     @property
     def corners(self):
         return self._corners
