@@ -23,12 +23,12 @@ Future steps
         to generate a height map that should be looped
 """
 
-range_y = 250
+range_y = 2000
 range_x = range_y * 2
 map_range = (range_x, range_y)
 max_points = range_y
 sea_level = .5
-seed = None  # 2  # 15  # 2672264153
+seed = None #3333342788  # 2  # 15  # 2672264153  # 983309147
 if seed is None:
     seed = np.random.randint(0, high=2 ** 32 - 1)
 print("seed", seed)

@@ -1,9 +1,10 @@
 from typing import List, Tuple
+
 from graph.face import Face, FaceType
 from map.voronoi_based.voronoi_height_graph import VoronoiHeightGraph
 
 
-def flood_fill(face: Face, target_type, replacement_type, window):
+def flood_fill(face: Face, target_type: FaceType, replacement_type: FaceType, window):
     visited = set()
     return flood_fill_step(face, target_type, replacement_type, window, visited)
 
@@ -41,8 +42,8 @@ class VoronoiTerrain(VoronoiHeightGraph):
             if face.height > self.sea_level:
                 face.type = FaceType.LAND
             else:
-                face.type = FaceType.WATER
-        self.flood_fill_ocean()
+                face.type = FaceType.OCEAN
+        # self.flood_fill_ocean() # WHY????
         land_faces = [face for face in self.faces if face.type == FaceType.LAND]
         for face in land_faces:
             for neighbor in face.neighbors:
